@@ -1,0 +1,52 @@
+if(window.location.href.indexOf('/teach/control/answers') > -1) { 
+  $(document).ajaxSuccess(function( event, xhr, settings ) {
+    if ( settings.url.indexOf('/teach/control/answers') > -1 ) {
+      var requestData = Object.fromEntries(new URLSearchParams(settings.data));
+      var responseJSON = JSON.parse(xhr.responseText);
+      if(typeof requestData.action !== 'undefined' && typeof responseJSON.status !== 'undefined' && responseJSON.status == "success") {
+        var answerId = requestData.answer_id;
+        if(requestData.action == "accept"){
+          var description = '<a href="https://edu.i-sales.pro/teach/control/answers/review?id=' + answerId + '">Принял ответ на ДЗ</a>';
+          increaseScaleValue(62413, window.accountUserId, 1, description);
+        }
+        if(requestData.action == "decline"){
+          var description = '<a href="https://edu.i-sales.pro/teach/control/answers/review?id=' + answerId + '">Отклонил ответ на ДЗ</a>';
+          increaseScaleValue(62413, window.accountUserId, 1, description);
+        }
+      }
+    }
+    if ( settings.url.indexOf('/cms/comment/add') > -1 ) {
+      var responseJSON = JSON.parse(xhr.responseText);
+      if(typeof responseJSON.success !== 'undefined' && typeof responseJSON.success !== 'undefined' && responseJSON.success == true) {
+          var answerId = responseJSON.settings.values.object_id;
+          if($('[data-id="'+answerId+'"]').attr('data-lesson-id') == "163074777") {
+            var description = '<a href="https://edu.i-sales.pro/teach/control/answers/review?id=' + answerId + '">Ответил пользователю</a>';
+            increaseScaleValue(62415, window.accountUserId, 1, description);
+          } else {
+            var description = '<a href="https://edu.i-sales.pro/teach/control/answers/review?id=' + answerId + '">Прокомментировал ответ на ДЗ</a>';
+            increaseScaleValue(62414, window.accountUserId, 1, description);
+          }
+      }
+    }
+  });
+  function increaseScaleValue(scaleId, userId, value, description="") {
+    var formData = new FormData();
+    formData.append("segmentId", "");
+    formData.append("rule", '{"type":"idsrule","inverted":0,"className":"app::components::logic::rule::IdsRule","params":{"value":"'+userId+'","valueMode":null}}');
+    formData.append("AddScaleUserRowOperation[scaleId]", scaleId);
+    formData.append("AddScaleUserRowOperation[value]", 1);
+    formData.append("AddScaleUserRowOperation[description]", description);
+    formData.append("execute", 'Запустить');
+    $.ajax({
+      type: "POST",
+      url: "/pl/logic/operation/prepare?contextType=UserContext&operationType=user_addscaleuserrow",
+      headers: {          
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",   
+      },  
+      processData : false,
+      contentType : false,
+      data: formData,
+      success: function(e, xhr, settings){}
+    });
+  }
+}
